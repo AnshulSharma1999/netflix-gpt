@@ -1,10 +1,21 @@
 import React, { useRef, useState } from "react";
 import Header from "./Header";
-import { checkValidSignInData, checkValidSignUpData } from "../Utils/vadlidate";
+import { checkValidSignInData, checkValidSignUpData } from "../Utils/validate";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile
+} from "firebase/auth";
+import { auth } from "../Utils/firebase";
+import { useDispatch } from "react-redux";
+import { addUser } from "../Utils/userSlice";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [isSignInForm, setIsSignInForm] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const name = useRef(null);
   const email = useRef(null);
@@ -19,6 +30,59 @@ const Login = () => {
           password.current.value
         );
     setErrorMessage(errorMessage);
+    if (errorMessage) return;
+    if (!isSignInForm) {
+      createUserWithEmailAndPassword(
+        auth,
+        email.current.value,
+        password.current.value
+      )
+        .then((userCredential) => {
+          const user = userCredential.user;
+          updateProfile(user, {
+            displayName: name.current.value,
+            photoURL: "https://cdn.cookielaw.org/logos/dd6b162f-1a32-456a-9cfe-897231c7763c/4345ea78-053c-46d2-b11e-09adaef973dc/Netflix_Logo_PMS.png",
+          })
+            .then(() => {
+              const { uid, email, displayName, photoURL } = auth.currentUser;
+              debugger;
+              dispatch(
+                addUser({
+                  uid: uid,
+                  email: email,
+                  displayName: displayName,
+                  photoURL: photoURL,
+                })
+              );
+              navigate("/browser");
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                setErrorMessage(`${errorCode} - ${errorMessage}`);
+            });
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          setErrorMessage(`${errorCode} - ${errorMessage}`);
+        });
+    } else {
+      signInWithEmailAndPassword(
+        auth,
+        email.current.value,
+        password.current.value
+      )
+        .then((userCredential) => {
+        //   const user = userCredential.user;
+          navigate("/browser");
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          setErrorMessage(`${errorCode} - ${errorMessage}`);
+        });
+    }
   };
 
   const resetFormFields = () => {
@@ -69,14 +133,14 @@ const Login = () => {
           type="password"
           placeholder="Password"
         ></input>
-        <p className="text-red-500 font-bold">{errorMessage}</p>
+        <p className="text-red-500 font-sans">{errorMessage}</p>
         <button
           onClick={handleButtonClick}
           className="my-4 p-2 bg-red-700 w-full rounded-lg"
         >
           {isSignInForm ? "Sign In" : "Sign Up"}
         </button>
-        <p className="cursor-pointer" onClick={toggleSignInForm}>
+        <p className="cursor-pointer font-sans" onClick={toggleSignInForm}>
           {isSignInForm
             ? "New to NETFLIX ? Sign Up now"
             : "Already registered? Sign In now"}
