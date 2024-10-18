@@ -1,25 +1,52 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { removeUser } from "../Utils/userSlice";
+import { addUser, removeUser } from "../Utils/userSlice";
 import { useNavigate } from "react-router-dom";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "../Utils/firebase";
+import { NETFLIX_LOGO } from "../Utils/constant";
 
 const Header = () => {
   const user = useSelector((store) => store.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const handleSignOut = () => {
-    dispatch(removeUser());
-    navigate("/");
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth); // Automatically triggers onAuthStateChanged
+    } catch (error) {
+      console.error("Sign out error: ", error);
+      navigate("/error"); // Handle error navigation only
+    }
   };
+
+  useEffect(() => {
+    // Set up the authentication listener once on component mount
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const { uid, email, displayName, photoURL } = user;
+        dispatch(
+          addUser({
+            uid,
+            email,
+            displayName,
+            photoURL,
+          })
+        );
+        navigate("/browse"); // Redirect to /browse after user is authenticated
+      } else {
+        dispatch(removeUser());
+        navigate("/"); // Redirect to home page if no user
+      }
+    });
+
+    // Clean up the listener on component unmount
+    return () => unsubscribe(); 
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
     <div className="flex justify-between absolute w-screen z-10 bg-gradient-to-b from-black">
-      <img
-        className="w-44"
-        src="https://cdn.cookielaw.org/logos/dd6b162f-1a32-456a-9cfe-897231c7763c/4345ea78-053c-46d2-b11e-09adaef973dc/Netflix_Logo_PMS.png"
-        alt="netflix_logo"
-      />
-
+      <img className="w-44" src={NETFLIX_LOGO} alt="netflix_logo" />
       {user && (
         <div className="flex p-2">
           <img className="h-12 w-12" src={user?.photoURL} alt="user_logo" />

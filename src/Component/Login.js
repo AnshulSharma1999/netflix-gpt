@@ -4,91 +4,82 @@ import { checkValidSignInData, checkValidSignUpData } from "../Utils/validate";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  updateProfile
+  updateProfile,
 } from "firebase/auth";
 import { auth } from "../Utils/firebase";
 import { useDispatch } from "react-redux";
 import { addUser } from "../Utils/userSlice";
-import { useNavigate } from "react-router-dom";
+import { Netflix_Login_Background, NETFLIX_LOGO } from "../Utils/constant";
 
 const Login = () => {
   const [isSignInForm, setIsSignInForm] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
-  const name = useRef(null);
-  const email = useRef(null);
-  const password = useRef(null);
+  const nameRef = useRef(null);
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
 
-  const handleButtonClick = () => {
-    var errorMessage = isSignInForm
-      ? checkValidSignInData(email.current.value, password.current.value)
-      : checkValidSignUpData(
-          name.current.value,
-          email.current.value,
-          password.current.value
-        );
-    setErrorMessage(errorMessage);
-    if (errorMessage) return;
-    if (!isSignInForm) {
-      createUserWithEmailAndPassword(
-        auth,
-        email.current.value,
-        password.current.value
-      )
-        .then((userCredential) => {
-          const user = userCredential.user;
-          updateProfile(user, {
-            displayName: name.current.value,
-            photoURL: "https://cdn.cookielaw.org/logos/dd6b162f-1a32-456a-9cfe-897231c7763c/4345ea78-053c-46d2-b11e-09adaef973dc/Netflix_Logo_PMS.png",
-          })
-            .then(() => {
-              const { uid, email, displayName, photoURL } = auth.currentUser;
-              debugger;
-              dispatch(
-                addUser({
-                  uid: uid,
-                  email: email,
-                  displayName: displayName,
-                  photoURL: photoURL,
-                })
-              );
-              navigate("/browser");
-            })
-            .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                setErrorMessage(`${errorCode} - ${errorMessage}`);
-            });
+  // Sign Up Function
+  const signUpUser = async (email, password, name) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      await updateProfile(user, {
+        displayName: name,
+        photoURL: NETFLIX_LOGO,
+      });
+
+      const { uid, displayName, photoURL } = auth.currentUser;
+      dispatch(
+        addUser({
+          uid,
+          email,
+          displayName,
+          photoURL,
         })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          setErrorMessage(`${errorCode} - ${errorMessage}`);
-        });
+      );
+    } catch (error) {
+      setErrorMessage(`${error.code} - ${error.message}`);
+    }
+  };
+
+  // Sign In Function
+  const signInUser = async (email, password) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      setErrorMessage(`${error.code} - ${error.message}`);
+    }
+  };
+
+  const handleButtonClick = async () => {
+    const email = emailRef.current.value;
+    const password = passwordRef.current.value;
+    const name = nameRef.current?.value; // Only for sign-up
+
+    // Validation
+    const errorMessage = isSignInForm
+      ? checkValidSignInData(email, password)
+      : checkValidSignUpData(name, email, password);
+
+    if (errorMessage) {
+      setErrorMessage(errorMessage);
+      return;
+    }
+
+    // Call Sign In or Sign Up
+    if (isSignInForm) {
+      await signInUser(email, password);
     } else {
-      signInWithEmailAndPassword(
-        auth,
-        email.current.value,
-        password.current.value
-      )
-        .then((userCredential) => {
-        //   const user = userCredential.user;
-          navigate("/browser");
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          setErrorMessage(`${errorCode} - ${errorMessage}`);
-        });
+      await signUpUser(email, password, name);
     }
   };
 
   const resetFormFields = () => {
-    if (name.current) name.current.value = "";
-    email.current.value = "";
-    password.current.value = "";
+    if (nameRef.current) nameRef.current.value = "";
+    emailRef.current.value = "";
+    passwordRef.current.value = "";
     setErrorMessage(null);
   };
 
@@ -102,7 +93,7 @@ const Login = () => {
       <Header />
       <div className="absolute">
         <img
-          src="https://assets.nflxext.com/ffe/siteui/vlv3/f272782d-cf96-4988-a675-6db2afd165e0/web/IN-en-20241008-TRIFECTA-perspective_b28b640f-cee0-426b-ac3a-7c000d3b41b7_large.jpg"
+          src={Netflix_Login_Background}
           alt="netflix_Login_background_img"
         />
       </div>
@@ -115,34 +106,34 @@ const Login = () => {
         </h1>
         {!isSignInForm && (
           <input
-            ref={name}
+            ref={nameRef}
             className="my-2 w-full p-2 bg-gray-700"
             type="text"
             placeholder="Full Name"
-          ></input>
+          />
         )}
         <input
-          ref={email}
+          ref={emailRef}
           className="my-2 w-full p-2 bg-gray-700"
-          type="text"
+          type="email"
           placeholder="Email Address"
-        ></input>
+        />
         <input
-          ref={password}
+          ref={passwordRef}
           className="my-2 w-full p-2 bg-gray-700"
           type="password"
           placeholder="Password"
-        ></input>
-        <p className="text-red-500 font-sans">{errorMessage}</p>
+        />
+        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
         <button
           onClick={handleButtonClick}
           className="my-4 p-2 bg-red-700 w-full rounded-lg"
         >
           {isSignInForm ? "Sign In" : "Sign Up"}
         </button>
-        <p className="cursor-pointer font-sans" onClick={toggleSignInForm}>
+        <p className="cursor-pointer" onClick={toggleSignInForm}>
           {isSignInForm
-            ? "New to NETFLIX ? Sign Up now"
+            ? "New to NETFLIX? Sign Up now"
             : "Already registered? Sign In now"}
         </p>
       </form>
