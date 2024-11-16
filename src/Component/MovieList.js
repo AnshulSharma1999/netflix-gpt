@@ -1,8 +1,22 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import MovieCard from "./MovieCard";
 
 const MovieList = ({ title, movies }) => {
   const scrollContainerRef = useRef(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+
+  const checkOverflow = () => {
+    if (scrollContainerRef.current) {
+      const { scrollWidth, clientWidth } = scrollContainerRef.current;
+      setIsOverflowing(scrollWidth > clientWidth);
+    }
+  };
+
+  useEffect(() => {
+    checkOverflow();
+    window.addEventListener("resize", checkOverflow);
+    return () => window.removeEventListener("resize", checkOverflow);
+  }, [movies]);
 
   const scrollLeft = () => {
     scrollContainerRef.current.scrollBy({
@@ -23,19 +37,23 @@ const MovieList = ({ title, movies }) => {
       <h1 className="text-3xl py-2 text-white">{title}</h1>
 
       <div className="relative">
-        <button
-          className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-2 z-10"
-          onClick={scrollLeft}
-        >
-          {"<"}
-        </button>
+        {isOverflowing && (
+          <button
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-2 z-10"
+            onClick={scrollLeft}
+          >
+            {"<"}
+          </button>
+        )}
 
-        <button
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-2 z-10"
-          onClick={scrollRight}
-        >
-          {">"}
-        </button>
+        {isOverflowing && (
+          <button
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-2 z-10"
+            onClick={scrollRight}
+          >
+            {">"}
+          </button>
+        )}
 
         <div
           ref={scrollContainerRef}
