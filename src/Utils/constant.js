@@ -5,11 +5,18 @@ export const Netflix_Login_Background =
   "https://assets.nflxext.com/ffe/siteui/vlv3/f272782d-cf96-4988-a675-6db2afd165e0/web/IN-en-20241008-TRIFECTA-perspective_b28b640f-cee0-426b-ac3a-7c000d3b41b7_large.jpg";
 
 export const API_OPTIONS = {
-  method: 'GET',
+  method: "GET",
   headers: {
-    accept: 'application/json',
-    Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiOGM2YzhhZWM2OGFkMWJhZGI3MWQ2NmZmODAzM2QzNyIsIm5iZiI6MTcyOTI4MTE3Mi40ODE0NDIsInN1YiI6IjY3MTJiMGY2MDk3YzNkNzc2MGY4ZDA2ZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.Cwq8lY3uCxpfIiYOE2DXGQEvhbo46V_Zq_NZyN7ZN2k'
-  }
+    accept: "application/json",
+    Authorization:
+      "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiOGM2YzhhZWM2OGFkMWJhZGI3MWQ2NmZmODAzM2QzNyIsIm5iZiI6MTcyOTI4MTE3Mi40ODE0NDIsInN1YiI6IjY3MTJiMGY2MDk3YzNkNzc2MGY4ZDA2ZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.Cwq8lY3uCxpfIiYOE2DXGQEvhbo46V_Zq_NZyN7ZN2k",
+  },
 };
 
 export const IMG_CDN_LINK = "https://image.tmdb.org/t/p/w500/";
+
+export const SUPPORTED_LANGUAGES = [
+  { identifier: "en", name: "English" },
+  { identifier: "hindi", name: "Hindi" },
+  { identifier: "spanish", name: "Spanish" },
+];

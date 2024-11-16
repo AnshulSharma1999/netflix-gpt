@@ -20,10 +20,13 @@ const Login = () => {
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
-  // Sign Up Function
   const signUpUser = async (email, password, name) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
       await updateProfile(user, {
         displayName: name,
@@ -44,7 +47,6 @@ const Login = () => {
     }
   };
 
-  // Sign In Function
   const signInUser = async (email, password) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -56,9 +58,8 @@ const Login = () => {
   const handleButtonClick = async () => {
     const email = emailRef.current.value;
     const password = passwordRef.current.value;
-    const name = nameRef.current?.value; // Only for sign-up
+    const name = nameRef.current?.value;
 
-    // Validation
     const errorMessage = isSignInForm
       ? checkValidSignInData(email, password)
       : checkValidSignUpData(name, email, password);
@@ -68,7 +69,6 @@ const Login = () => {
       return;
     }
 
-    // Call Sign In or Sign Up
     if (isSignInForm) {
       await signInUser(email, password);
     } else {

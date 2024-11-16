@@ -4,24 +4,34 @@ import { addUser, removeUser } from "../Utils/userSlice";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../Utils/firebase";
-import { NETFLIX_LOGO } from "../Utils/constant";
+import { NETFLIX_LOGO, SUPPORTED_LANGUAGES } from "../Utils/constant";
+import { toggleGptSearchView } from "../Utils/gptSlice";
+import { changeLanguage } from "../Utils/configSlice";
 
 const Header = () => {
   const user = useSelector((store) => store.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const showGptSearchView = useSelector((store) => store.gpt.showGptSearch);
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth); // Automatically triggers onAuthStateChanged
+      await signOut(auth);
     } catch (error) {
       console.error("Sign out error: ", error);
-      navigate("/error"); // Handle error navigation only
+      navigate("/error");
     }
   };
 
+  const handleGptSearchView = () => {
+    dispatch(toggleGptSearchView());
+  };
+
+  const handlePreferedLanguage = (e) => {
+    dispatch(changeLanguage(e.target.value));
+  };
+
   useEffect(() => {
-    // Set up the authentication listener once on component mount
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         const { uid, email, displayName, photoURL } = user;
@@ -33,22 +43,40 @@ const Header = () => {
             photoURL,
           })
         );
-        navigate("/browse"); // Redirect to /browse after user is authenticated
+        navigate("/browse");
       } else {
         dispatch(removeUser());
-        navigate("/"); // Redirect to home page if no user
+        navigate("/");
       }
     });
 
-    // Clean up the listener on component unmount
-    return () => unsubscribe(); 
-  }, []); // Empty dependency array ensures this runs only once on mount
+    return () => unsubscribe();
+  }, []);
 
   return (
-    <div className="flex justify-between absolute w-screen z-10 bg-gradient-to-b from-black">
+    <div className="flex justify-between absolute w-full z-10 bg-gradient-to-b from-black">
       <img className="w-44" src={NETFLIX_LOGO} alt="netflix_logo" />
       {user && (
         <div className="flex p-2">
+          {showGptSearchView && (
+            <select
+              className="bg-gray-700 text-white mx-4 my-2 p-2"
+              onChange={handlePreferedLanguage}
+            >
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <option key={lang.identifier} value={lang.identifier}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
+          )}
+          <button
+            className="text-white text-bold bg-purple-700 mx-4 p-2 my-2 rounded-lg"
+            onClick={handleGptSearchView}
+          >
+            {showGptSearchView ? "Home Page" : "GPT Search"}
+          </button>
+
           <img className="h-12 w-12" src={user?.photoURL} alt="user_logo" />
           <button
             onClick={handleSignOut}
